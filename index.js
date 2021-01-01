@@ -21,9 +21,24 @@ class Storage {
   }
 
   async init () {
-    if (this.cache) return this.cache;
-    this.cache = await window.caches.open(this.name);
-    return this.cache;
+    if (this.cache) return this.cache
+    let lastHash = localStorage.getItem("last-player-hash")
+    // delete last player item
+    if (lastHash && lastHash != null && lastHash != this.name) {
+      window.caches.open(lastHash).then((cache) => {
+        cache.keys().then((keys) => {
+          keys.forEach((request) => {
+            cache.delete(request)
+          })
+        })
+      })
+
+      window.localStorage.setItem("last-player-hash", null)
+    }
+
+    this.cache = window.caches.open(this.name)
+    window.localStorage.setItem("last-player-hash", this.name)
+    return this.cache
   }
 
   put (index, buf, cb = noop) {
